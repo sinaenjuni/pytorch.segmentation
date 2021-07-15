@@ -3,6 +3,7 @@ import torchvision.transforms as T
 import numpy as np
 import pandas as pd
 from PIL import Image
+import os
 
 class HICO(torch.utils.data.Dataset):
     def __init__(self, image_dir, annotation_path, select_obj, transform, mode):
