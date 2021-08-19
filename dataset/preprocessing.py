@@ -7,8 +7,27 @@ import numpy as np
 IMGPATH = "../data/CelebAMask-HQ/CelebA-HQ-img"
 SEGPATH = "../data/CelebAMask-HQ/CelebAMask-HQ-mask-anno"
 
-INDEX = {'skin':1,
-         ''}
+
+classes = { '0'  : 'back_ground',
+            '1'  : 'skin',
+            '2'  : 'cloth',
+            '3'  : 'neck',
+            '4'  : 'neck_l',
+            '5'  : 'l_ear',
+            '6'  : 'r_ear',
+            '7'  : 'ear_r',
+            '8'  : 'l_brow',
+            '9'  : 'r_brow',
+            '10' : 'l_eye',
+            '11' : 'r_eye',
+            '12' : 'nose',
+            '13' : 'mouth',
+            '14' : 'u_lip',
+            '15' : 'l_lip',
+            '16' : 'eye_g',
+            '17' : 'hair',
+            '18' : 'hat'}
+
 
 def getImglist(path):
     path = Path(path)
