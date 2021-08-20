@@ -8,25 +8,25 @@ IMGPATH = "../data/CelebAMask-HQ/CelebA-HQ-img"
 SEGPATH = "../data/CelebAMask-HQ/CelebAMask-HQ-mask-anno"
 
 
-classes = { '0'  : 'back_ground',
-            '1'  : 'skin',
-            '2'  : 'cloth',
-            '3'  : 'neck',
-            '4'  : 'neck_l',
-            '5'  : 'l_ear',
-            '6'  : 'r_ear',
-            '7'  : 'ear_r',
-            '8'  : 'l_brow',
-            '9'  : 'r_brow',
-            '10' : 'l_eye',
-            '11' : 'r_eye',
-            '12' : 'nose',
-            '13' : 'mouth',
-            '14' : 'u_lip',
-            '15' : 'l_lip',
-            '16' : 'eye_g',
-            '17' : 'hair',
-            '18' : 'hat'}
+classes = { 'back_ground':0,
+            'skin':1,
+            'cloth':2,
+            'neck':3,
+            'neck_l':4,
+            'l_ear':5,
+            'r_ear':6,
+            'ear_r':7,
+            'l_brow':8,
+            'r_brow':9,
+            'l_eye':10,
+            'r_eye':11,
+            'nose':12,
+            'mouth':13,
+            'u_lip':14,
+            'l_lip':15,
+            'eye_g':16,
+            'hair':17,
+            'hat':18}
 
 
 def getImglist(path):
@@ -62,15 +62,36 @@ def getSeg(path_list):
     # plt.show()
 
 
+def getConbineSeg(seg_list):
+    ret = np.zeros((512,512,19))
+    for i in seg_list:
+        seg_type = '_'.join(i.name.split('_')[1:]).replace('.png', '')
+        seg_class = classes[seg_type]
+        seg = Image.open(i).convert("L")
+        arr = np.array(seg) // 255 * seg_class
+        ret[..., seg_class] = arr
+    ret = np.argmax(ret, 2)
+    return ret
+
+
 if __name__ == "__main__":
     img_list = getImglist(IMGPATH)
+    # seg_list = getSeglist(SEGPATH, '24916')
+    # seg_list = getSeglist(SEGPATH, '26')
+    # cseg = getConbineSeg(seg_list)
+    # plt.imshow(cseg)
+    # plt.show()
+
     # print(img_list)
-    # for i in range(30000):
-    #     img_id = img_list[i].name.replace('.jpg', '')
-    #     seg_list = getSeglist(SEGPATH, img_id)
-    seg_list = getSeglist(SEGPATH, '24916')
-    for i in seg_list:
-        print(i)
+    for i in range(10):
+        img_id = img_list[i].name.replace('.jpg', '')
+        img = getIMG(img_list[i])
+        showIMG(img)
+
+        seg_list = getSeglist(SEGPATH, img_id)
+        cseg = getConbineSeg(seg_list)
+        plt.imshow(cseg, cmap='jet')
+        plt.show()
 
     # img = getIMG(img_list[0]).resize((512, 512))
     # showIMG(img)
