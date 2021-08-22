@@ -68,10 +68,17 @@ def getConbineSeg(seg_list):
         seg_type = '_'.join(i.name.split('_')[1:]).replace('.png', '')
         seg_class = classes[seg_type]
         seg = Image.open(i).convert("L")
+        # seg = np.array(seg)
+        # print(np.unique(seg))
         arr = np.array(seg) // 255 * seg_class
         ret[..., seg_class] = arr
-    ret = np.argmax(ret, 2)
+    ret = np.argmax(ret, 2).astype(np.uint8)
     return ret
+
+def saveImg(path:Path, img):
+    if not path.parent.exists():
+        path.parent.mkdir(exist_ok=True, parents=True)
+    Image.fromarray(img).save(path)
 
 
 if __name__ == "__main__":
@@ -82,16 +89,20 @@ if __name__ == "__main__":
     # plt.imshow(cseg)
     # plt.show()
 
-    # print(img_list)
-    for i in range(10):
+    for i in range(len(img_list)):
+        print(i)
         img_id = img_list[i].name.replace('.jpg', '')
-        img = getIMG(img_list[i])
-        showIMG(img)
+        # img = getIMG(img_list[i])
+        # showIMG(img)
 
         seg_list = getSeglist(SEGPATH, img_id)
         cseg = getConbineSeg(seg_list)
-        plt.imshow(cseg, cmap='jet')
-        plt.show()
+
+        saveImg(Path(f'./CelebA-HQ-mask/{img_id}.png'), cseg)
+
+        # print(np.unique(cseg))
+        # plt.imshow(cseg, cmap='gray')
+        # plt.show()
 
     # img = getIMG(img_list[0]).resize((512, 512))
     # showIMG(img)
