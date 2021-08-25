@@ -67,9 +67,9 @@ def main(args):
     test_iters = iter(test_loader)
     fixed_img, fixed_label = test_iters.next()
     fixed_img = fixed_img.to(device)
+    fixed_img = denormImg(fixed_img)
     fixed_label = fixed_label.to(device)
-    base_label = denormSeg(fixed_label)
-
+    fixed_label = denormSeg(fixed_label)
 
     # loss_function = OhemCELoss(thresh=args.score_thres,
     #                    n_min=args.n_min,
@@ -126,18 +126,27 @@ def main(args):
                 pred = net(fixed_img)
                 pred = pred.argmax(1)
                 pred = denormSeg(pred)
+
+                print(fixed_img.size(), fixed_label.size(), pred.size())
                 x_concat = torch.cat((fixed_img, fixed_label, pred), dim=2)
                 # sample_path = os.path.join(save_path, '{}-images.jpg'.format(i + 1))
-                sample_path = save_path / f'{i+1}-images.jpg'
+                sample_path = save_path / 'samples' / f'{i+1}-images.jpg'
+                if not sample_path.parent.exists():
+                    sample_path.parent.mkdir(parents=True, exist_ok=True)
                 save_image(x_concat.data.cpu(), sample_path, nrow=args.batch_size, padding=0)
                 print('Saved real and fake images into {}...'.format(sample_path))
 
         if (i + 1) % args.sample_step == 0:
-            if previous_best_loss > loss or previous_best_loss is None:
+            if previous_best_loss is None:
+                previous_best_loss = loss
+
+            if previous_best_loss >= loss:
                 previous_best_loss = loss
                 state = net.module.state_dict() if hasattr(net, 'module') else net.state_dict()
-                file_name = f"{i+1}-model:{loss}.pt"
-                torch.save(state, save_path / file_name)
+                loss_path = save_path / 'models' / f"{i+1}-model:{loss}.pt"
+                if not loss_path.parent.exists():
+                    loss_path.parent.mkdir(exist_ok=True, parents=True)
+                torch.save(state, loss_path)
                 print(f'Find best loss -> {loss}')
 
 
@@ -151,7 +160,7 @@ if __name__ == '__main__':
     parser.add_argument('--momentum', default=0.9)
     parser.add_argument('--weight_decay', default=5e-4)
     parser.add_argument('--start_iters', default=0, type=int)
-    parser.add_argument('--num_iters', default=100000, type=int)
+    parser.add_argument('--num_iters', default=30000, type=int)
     parser.add_argument('--batch_size', default=16, type=int)
     parser.add_argument('--num_workers', default=16, type=int)
     parser.add_argument('--save_path', default='/home/sin/save_files/')

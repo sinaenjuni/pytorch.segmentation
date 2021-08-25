@@ -83,6 +83,11 @@ class PairedDataRandomCrop:
             i, j, h, w = T.RandomCrop.get_params(img, output_size=self.output_size)
             img = TF.crop(img, i, j, h, w)
             seg = TF.crop(seg, i, j, h, w)
+
+        else:
+            img = TF.resize(img, self.output_size)
+            seg = TF.resize(seg, self.output_size)
+
         return img, seg
 
 
