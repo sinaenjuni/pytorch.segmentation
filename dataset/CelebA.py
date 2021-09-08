@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset, Subset
 from PIL import Image
 from pathlib import Path
+import torch.nn.functional as F
 import torchvision.transforms as T
 import torchvision.transforms.functional as TF
 import random
@@ -43,8 +44,8 @@ class PairedDataResize:
     def __call__(self, imgs):
         img = imgs[0]
         seg = imgs[1]
-        img = TF.resize(img, self.size)
-        seg = TF.resize(seg, self.size)
+        img = TF.resize(img, self.size, TF.InterpolationMode.BILINEAR)
+        seg = TF.resize(seg, self.size, TF.InterpolationMode.NEAREST)
 
         return img, seg
 
@@ -77,16 +78,16 @@ class PairedDataRandomCrop:
         img = imgs[0]
         seg = imgs[1]
         if random.random() < self.prob:
-            img = TF.resize(img, self.inter_size)
-            seg = TF.resize(seg, self.inter_size)
+            img = TF.resize(img, self.inter_size, interpolation=TF.InterpolationMode.BILINEAR)
+            seg = TF.resize(seg, self.inter_size, interpolation=TF.InterpolationMode.NEAREST)
 
             i, j, h, w = T.RandomCrop.get_params(img, output_size=self.output_size)
             img = TF.crop(img, i, j, h, w)
             seg = TF.crop(seg, i, j, h, w)
 
         else:
-            img = TF.resize(img, self.output_size)
-            seg = TF.resize(seg, self.output_size)
+            img = TF.resize(img, self.output_size, interpolation=TF.InterpolationMode.BILINEAR)
+            seg = TF.resize(seg, self.output_size, interpolation=TF.InterpolationMode.NEAREST)
 
         return img, seg
 
@@ -130,11 +131,11 @@ if __name__ == "__main__":
     transforms = T.Compose([
         PairedDataToTensor(),
         PairedDataNormalization(),
-        PairedDataResize(512),
+        # PairedDataResize(256),
         PairedDataRandomHorizontalFlip(prob = .5),
-        PairedDataRandomCrop(prob=.5,
-                             inter_size = (512, 512),
-                             output_size = (512, 512))
+        PairedDataRandomCrop(prob=1,
+                             inter_size = (272, 272),
+                             output_size = (256, 256))
     ])
 
     dataset = CelebADataset(img_path='/home/sin/git/pytorch.segmentation/data/CelebAMask-HQ/CelebA-HQ-img/',
@@ -151,6 +152,10 @@ if __name__ == "__main__":
 
     print(img.size())
 
+    from torchvision.utils import make_grid
+    import matplotlib.pyplot as plt
+
+
 
     # loader = DataLoader(train_set, batch_size=8)
     # iters = iter(loader)
@@ -159,9 +164,7 @@ if __name__ == "__main__":
     from model import DoubleResNet
     import torch.nn as nn
     import torch.nn.functional as F
-    import matplotlib.pyplot as plt
-    from torchvision.utils import make_grid
-    import torch
+    # import torch
 
     # net = DoubleResNet(upsample_blocks = [4,4,4,4,4],
     #                 downsample_blocks = [3,3,3,3],
