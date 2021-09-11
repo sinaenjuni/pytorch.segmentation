@@ -1,5 +1,5 @@
 from dataset.CelebA import *
-from model import DoubleResNet
+from models.model import DoubleResNet
 
 import torch
 import torch.nn as nn
@@ -11,12 +11,7 @@ torch.manual_seed(7777)
 import torchvision.transforms as T
 from torch.utils.data import DataLoader, Subset
 import argparse
-import os
 
-from torch.utils.data.distributed import DistributedSampler
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel
-import torch.multiprocessing as mp
 from pathlib import Path
 import time
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')

@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import DataLoader, Dataset, Subset
 from PIL import Image
 from pathlib import Path
-import torch.nn.functional as F
 import torchvision.transforms as T
 import torchvision.transforms.functional as TF
 import random
@@ -33,7 +32,7 @@ class PairedDataNormalization:
     def __call__(self, imgs):
         img = imgs[0]
         seg = imgs[1]
-        img = TF.normalize(img, (.5), (.5))
+        img = TF.normalize(img, (.5, .5, .5), (.5, .5, .5))
         return img, seg
 
 
@@ -150,20 +149,13 @@ if __name__ == "__main__":
     iters = iter(loader)
     img, seg = iters.next()
 
-    print(img.size())
-
-    from torchvision.utils import make_grid
-    import matplotlib.pyplot as plt
-
-
+    print(img.size(), img.min(), img.max())
+    print(seg.size(), seg.min(), seg.max())
 
     # loader = DataLoader(train_set, batch_size=8)
     # iters = iter(loader)
     # img, seg = iters.next()
 
-    from model import DoubleResNet
-    import torch.nn as nn
-    import torch.nn.functional as F
     # import torch
 
     # net = DoubleResNet(upsample_blocks = [4,4,4,4,4],

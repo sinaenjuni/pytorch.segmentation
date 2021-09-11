@@ -1,10 +1,32 @@
-import torch
-from torchvision.utils import make_grid, save_image
 import torch.nn as nn
-from model import DoubleResNet
+from models.model import DoubleResNet
 from dataset.CelebA import *
-import matplotlib.pyplot as plt
 import torch.nn.functional as F
+from dataset.preprocessing import classes
+
+
+class IOU:
+    def __init__(self):
+        self.classes = {v: k for k, v in classes.items()}
+
+    def __call__(self, preds, labels):
+        oh_pred = F.one_hot(preds, num_classes=len(self.classes))
+        oh_labels = F.one_hot(labels, num_classes=len(self.classes))
+
+        union = torch.logical_or(oh_pred, oh_labels)
+        intersection = torch.logical_and(oh_pred, oh_labels)
+
+        union = union.sum((1, 2))
+        intersection = intersection.sum((1, 2))
+
+        IOUs = (intersection / union).nan_to_num(nan=1).mean(0)
+        mIOU = IOUs.mean(0)
+        # for i in range(len(self.classes)):
+        #     print(self.classes[i], IOU[..., i])
+        # print(mIOU)
+        return mIOU, IOUs
+
+
 
 if __name__ == '__main__':
 
@@ -28,11 +50,10 @@ if __name__ == '__main__':
     train_set = Subset(dataset, train_indicise)
     test_set = Subset(dataset, test_indicise)
 
-    test_loader = DataLoader(test_set, batch_size=16, shuffle=False)
+    train_loader = DataLoader(train_set, batch_size=8, shuffle=False)
 
-
-    iters = iter(test_loader)
-    img, seg = iters.next()
+    iters = iter(train_loader)
+    inputs, labels = iters.next()
 
     net = DoubleResNet(upsample_blocks = [4,4,4,4,4],
                         downsample_blocks = [3,3,3,3],
@@ -41,11 +62,15 @@ if __name__ == '__main__':
     net.load_state_dict(torch.load('/home/sin/git/pytorch.segmentation/DoubleResNetV2/8.23_17:31:36/models/29000-model:0.2208298146724701.pt'))
     net.eval()
 
-
-    img = img.to(torch.device('cuda'))
-    pred = net(img)
+    inputs = inputs.to(torch.device('cuda'))
+    labels = labels.to(torch.device('cuda'))
+    pred = net(inputs)
     pred = pred.argmax(1)
     print(pred.size())
+    print(labels.size())
+
+    iou = IOU()
+    iou(pred, labels)
 
     # pred = denormSeg(pred)
     # img = denormImg(img)
@@ -56,13 +81,55 @@ if __name__ == '__main__':
     #
     # save_image(target, './seg.png')
 
-    onehot_pred = F.one_hot(pred, num_classes = 19).cpu()
-    onehot_seg = F.one_hot(seg, num_classes = 19).cpu()
+    # classes = {v:k for k, v in classes.items()}
+    # print(classes)
+    #
+    # oh_pred = F.one_hot(pred, num_classes = 19)
+    # oh_labels = F.one_hot(labels, num_classes = 19)
+    #
+    # # plt.imshow(oh_pred[...,0].permute(1,2,0))
+    # # plt.show()
+    # #
+    # # plt.imshow(oh_labels[...,0].permute(1,2,0))
+    # # plt.show()
+    #
+    # union = torch.logical_or(oh_pred, oh_labels)
+    # intersection = torch.logical_and(oh_pred, oh_labels)
+    #
+    # union = union.sum((1, 2))
+    # intersection = intersection.sum((1, 2))
+    #
+    # IOU = (intersection/union).nan_to_num(nan=1).mean(0)
+    # # IOU = (intersection/union)
+    # mIOU = IOU.mean(0)
+    # for i in range(len(classes)):
+    #     print(classes[i], IOU[...,i])
+    # print(mIOU)
 
-    added_
-    for i in range()
 
-    print((onehot_pred + onehot_seg).size())
+
+
+    # print(oh_union.size())
+    # for i in range(18):
+    #     plt.imshow(oh_intersection[...,i].permute(1,2,0))
+    #     plt.show()
+    #     plt.imshow(oh_union[...,i].permute(1,2,0))
+    #     plt.show()
+    #
+    # print(torch.logical_or(oh_pred[..., 0], oh_labels[..., 0]).size())
+
+    # oh_pred = oh_pred.permute(0,3,1,2)
+    # oh_labels = oh_labels.permute(0,3,1,2)
+    #
+    # print(oh_pred.size(), oh_labels.size())
+
+
+
+
+    # added_
+    # for i in range()
+    #
+    # print((onehot_pred + onehot_seg).size())
 
     # print(onehot_seg.size(), onehot_seg.size())
 
