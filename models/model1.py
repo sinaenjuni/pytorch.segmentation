@@ -8,50 +8,9 @@ from typing import Type, Any, Callable, Union, List, Optional
 from torch import Tensor
 from torchsummary import summary
 
-class Encorder1(nn.Module):
-    def __init__(self, in_channel, out_channel, downsample, dilation, groups):
-        super().__init__()
-        self.is_skipConv = in_channel != out_channel
+from module import Encorder1
 
-        moodules = [nn.Conv2d(in_channel,
-                              out_channel,
-                              kernel_size=3,
-                              stride= 2 if downsample else 1,
-                              padding=dilation,
-                              groups=groups,
-                              bias=False,
-                              dilation=dilation),
-                    nn.BatchNorm2d(out_channel),
-                    nn.ReLU(),
-                    nn.Conv2d(out_channel, out_channel,
-                                           kernel_size=3,
-                                           stride=1,
-                                           padding=dilation,
-                                           groups=groups,
-                                           bias=False,
-                                           dilation=dilation),
-                    nn.BatchNorm2d(out_channel)]
 
-        self.skip_conv = nn.Conv2d(in_channel,
-                                   out_channel,
-                                   kernel_size=1,
-                                   stride=2 if downsample else 1,
-                                   bias=False)
-
-        self.block = nn.Sequential(*moodules)
-
-    def forward(self, x: Tensor) -> Tensor:
-        if self.is_skipConv:
-            return F.relu(self.block(x) + self.skip_conv(x))
-        else:
-            return F.relu(self.block(x) + x)
-
-if __name__ == '__main__':
-    module = Encorder1(3, 32, False, 1, 1).to(torch.device('cuda'))
-    summary(module, (3, 32, 32), device='cuda')
-    x = module(torch.randn((1, 3, 32, 32)).to(torch.device('cuda')))
-    print(module, x.size())
-    # print(module)
 
 class Decorder1(nn.Module):
     def __init__(self, in_channel, out_channel, upsample, dilation, groups):
